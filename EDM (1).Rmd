@@ -1,0 +1,389 @@
+---
+title: "EDM"
+output: html_document
+date: "2023-11-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+#tratamiento de datos------------
+library(readr)
+library(dplyr)
+datosTI <- read_delim("C:/Users/sanma/OneDrive/Escritorio/Alejo/EDM/total_tri_4_2022_pl.CSV", 
+                      delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+
+
+Indicador<-datosTI%>%select(DIRECTORIO)%>%group_by(DIRECTORIO)%>%select(DIRECTORIO)%>%as.vector()
+
+Indicador<-Indicador$DIRECTORIO
+
+S_y_E <- read_delim("C:/Users/sanma/Downloads/Características generales, seguridad social en salud y educación.CSV", 
+                                                                              delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+library(stringr)
+datosTI<-S_y_E%>%select(DIRECTORIO, SECUENCIA_P,ORDEN,P6083,P6081,P2057,MES)%>% 
+  filter(MES==12)%>%
+  right_join(datosTI,by=c('SECUENCIA_P'='SECUENCIA_P',"DIRECTORIO"="DIRECTORIO","ORDEN"="ORDEN"))%>%as.data.frame()
+
+
+HogaresVivienda <- read_csv("C:/Users/sanma/Downloads/HogaresVivienda (1).csv")
+
+datosTI<-datosTI%>%left_join(HogaresVivienda,by=c('DIRECTORIO'='Directorio'))
+
+
+
+colnames(datosTI)
+
+str(datosTI)
+
+str(datosTI)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Variables originales para días, horas al día y la variable indicadora
+dias <- c(
+  "P3131S2A1", "P3131S3A1", "P3132S1A1", "P3132S2A1", "P3133S1A1", "P3133S2A1",
+  "P3134S1A1", "P3134S2A1", "P3135S1A1", "P3135S2A1", "P3136S1A1", "P3136S2A1",
+  "P3137S1", "P3138S1", "P3139S1", "P3141S1", "P3142S1", "P3143S1", "P3144S1",
+  "P3145S1", "P3502S1", "P3503S1", "P3504S1"
+)
+
+horas_dia<- c(
+  "P3131S2A2", "P3131S3A2", "P3132S1A2", "P3132S2A2", "P3133S1A2", "P3133S2A2",
+  "P3134S1A2", "P3134S2A2", "P3135S1A2", "P3135S2A2", "P3136S1A2", "P3136S2A2",
+  "P3137S2", "P3138S2", "P3139S2", "P3141S2", "P3142S2", "P3143S2", "P3144S2",
+  "P3145S2", "P3502S2", "P3503S2", "P3504S2"
+)
+
+indicadoras <- c( "P3131S2", "P3131S3", "P3132S1", "P3132S2", "P3133S1", "P3133S2",
+                  "P3134S1", "P3134S2", "P3135S1", "P3135S2", "P3136S1", "P3136S2",
+                  "P3137", "P3138", "P3139", "P3141", "P3142", "P3143", "P3144",
+                  "P3145", "P3502", "P3503", "P3504")
+
+
+datosTI1<-datosTI[,c("TAM_HOGAR","P3271","P6040","P6050","P6070","P6090","P6160","P6170","P3041",
+                     "P3042S1","P400",'P6083','P6081','P2057',
+                     'ClaseHogar', 'Depart' ,'TipoHogar' ,  'Luz'  , 'Gas' ,'Alcantarillado', 'Basura' ,'Acueducto', 'ProceAgua' ,'PropHogar', 'CantHogares',"P408","P409","P414","P420","P413","P405")]
+datosTI1<-rename(datosTI1,
+                 SEXO = P3271,
+                 EDAD = P6040,
+                 PARENTESCO = P6050,
+                 ESTADO_CIVIL = P6070,
+                 AFILIACION_SEGURIDAD_SOCIAL = P6090,
+                 SABE_LEER_ESCRIBIR = P6160,
+                 ASISTE_INSTITUCION_EDUCATIVA = P6170,
+                 INSTITUCION_EDUCATIVA = P3041,
+                 ANIO_GRADO = P3042S1,
+                 ACTIVIDAD_PRINCIPAL = P400,
+                 VIVE_M=P6083,
+                 VIVE_P=P6081,
+                 CAMP=P2057
+)
+
+
+# Renombrar factores en las columnas específicas
+datosTI1$SEXO <- factor(datosTI1$SEXO, levels = c(1, 2), labels = c("Hombre", "Mujer"))
+
+datosTI1$PARENTESCO <- factor(datosTI1$PARENTESCO, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13),
+                              labels = c("Jefe (a) del hogar", "Pareja, esposo(a), cónyuge, compañero(a)", "Hijo(a), hijastro(a)", "Padre o madre", "Suegro(a)", "Hermano(a) o hermanastro(a)", "Yerno o nuera", "Nieto(a)", "Otro pariente", "Empleado(a) del servicio doméstico y sus parientes", "Pensionista", "Trabajador", "Otro no pariente"))
+
+datosTI1$ESTADO_CIVIL <- factor(datosTI1$ESTADO_CIVIL, levels = c(1, 2, 3, 4, 5, 6),
+                                labels = c("No esta casado(a) y vive en pareja hace menos de dos años", "No esta casado (a) y vive en pareja hace dos años o más", "Esta casado (a)", "Esta separado (a) o divorciado (a)", "Esta viudo (a)", "Esta soltero (a)"))
+
+datosTI1$AFILIACION_SEGURIDAD_SOCIAL <- factor(datosTI1$AFILIACION_SEGURIDAD_SOCIAL, levels = c(1, 2, 9),
+                                               labels = c("Sí", "No", "No sabe, no informa"))
+
+datosTI1$SABE_LEER_ESCRIBIR <- factor(datosTI1$SABE_LEER_ESCRIBIR, levels = c(1, 2),
+                                      labels = c("Sí", "No"))
+
+datosTI1$ASISTE_INSTITUCION_EDUCATIVA <- factor(datosTI1$ASISTE_INSTITUCION_EDUCATIVA, levels = c(1, 2),
+                                                labels = c("Sí", "No"))
+
+datosTI1$INSTITUCION_EDUCATIVA <- factor(datosTI1$INSTITUCION_EDUCATIVA, levels = c(1, 2),
+                                         labels = c("Publica", "Privada"))
+
+
+datosTI1$ACTIVIDAD_PRINCIPAL <- factor(datosTI1$ACTIVIDAD_PRINCIPAL, levels = c(1, 2, 3, 4, 5, 6),
+                                       labels = c("Trabajando", "Buscando trabajo", "Estudiando", "Oficios del hogar", "Incapacitado permanente para trabajar", "Otra actividad"))
+
+
+
+
+# Realizar la suma de variables de días
+datosTI1$SUMA_DIAS <- rowSums(datosTI[,dias], na.rm = TRUE)
+
+# Realizar la suma de variables de horas al día
+datosTI1$SUMA_HORAS_DIA <- rowSums(datosTI[,horas_dia], na.rm = TRUE)
+
+# Realizar la suma de variables indicadoras
+datosTI1$SUMA_INDICADORAS <- rowSums(sapply(datosTI[indicadoras], function(x) ifelse(x == 1, 1, 0)), na.rm = TRUE)
+
+summary(datosTI1$SUMA_INDICADORAS)
+
+
+missings <- function(x) return(sum(is.na(x)))
+apply(datosTI1,2,missings)
+library(dplyr)
+#vemos cuantos hay de cada grupo
+
+datosTI1%>%group_by(ACTIVIDAD_PRINCIPAL)%>% summarise(n=n())
+
+# 1 - Trabajando
+# 2 - Buscando trabajo
+# 3 - Estudiando
+# 4 - Oficios del hogar
+# 5 - Incapacitado permanente para trabajar
+# 6 - Otra actividad, ¿Cuál?
+
+datosTI2<-datosTI1 %>%
+  filter(ACTIVIDAD_PRINCIPAL=='Estudiando' & is.na(P405)) %>%
+  as.data.frame()
+set.seed(1234)
+
+datosTI2<-datosTI2%>%
+  sample_n(size=506,replace=FALSE)%>%
+  as.data.frame()
+
+datosTI3<-datosTI1 %>%
+  filter(ACTIVIDAD_PRINCIPAL == 'Oficios del hogar') %>%
+  as.data.frame()
+
+datosTI11<-datosTI1 %>%
+  filter(ACTIVIDAD_PRINCIPAL =='Trabajando' |ACTIVIDAD_PRINCIPAL =='Buscando trabajo')  %>%
+  as.data.frame()
+
+
+ACTIVIDAD_PRINCIPAL<-rep('Trabajando',506)
+
+datosTI11<-datosTI11[,-11]
+datosTI11<-cbind(datosTI11,ACTIVIDAD_PRINCIPAL)
+
+
+TI<-rbind(datosTI11,datosTI2, datosTI3)
+
+
+TI$VIVE_M <- as.factor(TI$VIVE_M)
+TI$VIVE_P <- as.factor(TI$VIVE_P)
+TI$CAMP <- as.factor(TI$CAMP)
+TI$Depart <- as.factor(TI$Depart)
+TI$Luz <- as.factor(TI$Luz)
+TI$Gas <- as.factor(TI$Gas)
+TI$Alcantarillado <- as.factor(TI$Alcantarillado)
+TI$Basura <- as.factor(TI$Basura)
+TI$Acueducto <- as.factor(TI$Acueducto)
+TI$PropHogar <- as.factor(TI$PropHogar)
+TI$ACTIVIDAD_PRINCIPAL <- as.factor(TI$ACTIVIDAD_PRINCIPAL)
+TI$ClaseHogar <- as.factor(TI$ClaseHogar)
+TI$ProceAgua <- as.factor(TI$ProceAgua)
+TI$TipoHogar <- as.factor(TI$TipoHogar)
+summary(TI)
+colnames(TI)
+datosTI$P400 <-factor(datosTI$P400, levels = c(1, 2, 3, 4, 5, 6),
+                    labels = c("Trabajando", "Buscando trabajo", "Estudiando", "Oficios del hogar", "Incapacitado permanente para trabajar", "Otra actividad"))
+
+```
+
+Se tomaron los registros de trabajo infantil provenientes del módulo correspondiente de la GEIH del 2022. Los datos que se van a analizar incluyeron a los niños que trabajan, realizan labores domésticas y asisten a la escuela. Para asegurar una cantidad de datos similar, se llevó a cabo un Muestreo Aleatorio Simple (MAS) con los niños que asisten a la escuela, seleccionando un tamaño correspondiente al de los niños que trabajan.
+
+
+## Analisis exploratorio para recategorizacion
+
+```{r}
+summary(TI)
+```
+
+### histograma y boxplot de variables cuantitativas
+
+```{r}
+hist(TI$TAM_HOGAR, xlab='N° en el Hogar',ylab = ' ', main=' ')
+hist(TI$CantHogares, xlab='cantidad de Hogares',ylab = ' ', main=' ')
+hist(TI$ANIO_GRADO, xlab='Año de grado', ylab = ' ', main=' ')
+hist(TI$EDAD, xlab='Edad', ylab = ' ', main=' ')
+boxplot(TI$TAM_HOGAR, xlab='N° en el Hogar',ylab = ' ', main=' ')
+boxplot(TI$CantHogares, xlab='cantidad de Hogares',ylab = ' ', main=' ')
+boxplot(TI$ANIO_GRADO, xlab='Año de grado', ylab = ' ', main=' ')
+boxplot(TI$EDAD, xlab='Edad', ylab = ' ', main=' ')
+
+```
+
+Se recategorizan las variables por sus respectivos cuantiles y se procede a hacer el ACM de los niños que trabajan, estudian o hacen oficios del hogar.
+
+
+## Analisis De correspondencias Multiples 
+
+### Primer ACM
+
+```{r,include=FALSE}
+Primero<-TI%>%mutate(EDADC=case_when(EDAD <14  ~ "14-",
+                                     EDAD > 15 ~ "15+",
+                                         TRUE ~ "14-15"),
+                     TAM_HOGARC=case_when(TAM_HOGAR <3 ~ "1-2",
+                                          TAM_HOGAR > 4 ~ "4+",
+                                          TRUE ~ "3-4"),
+                     ESTADO_CIVIL=case_when(ESTADO_CIVIL== 'Esta soltero (a)' ~ 'soltero',
+                                            TRUE~'OtroE'),
+                     PARENTESCO=case_when(PARENTESCO=='Hijo(a), hijastro(a)'~'H',
+                                          PARENTESCO=='Nieto(a)'~'N',
+                                          TRUE~'OtroP'),
+                     VIVE_M=case_when(VIVE_M==1~'sí',
+                                      VIVE_M==0 |is.na(VIVE_M)~'no'
+                                      ),
+                     VIVE_P=case_when(VIVE_P==1~'sí',
+                                      VIVE_P==0 | is.na(VIVE_P)~'no'
+                                      ),
+                     CAMP=case_when(CAMP==1~'sí',
+                                      CAMP==0 | is.na(CAMP)~'no'
+                                     ),)%>%as.data.frame()
+Primero$EDADC<-as.factor(Primero$EDADC)
+Primero$TAM_HOGARC<-as.factor(Primero$TAM_HOGARC)
+Primero$ESTADO_CIVIL<-as.factor(Primero$ESTADO_CIVIL)
+Primero$VIVE_M<-as.factor(Primero$VIVE_M)
+Primero$PARENTESCO<-as.factor(Primero$PARENTESCO)
+Primero$VIVE_P<-as.factor(Primero$VIVE_P)
+Primero$CAMP<-as.factor(Primero$CAMP)
+
+Primero<-rename(Primero,
+               TAMAN = TAM_HOGAR,
+               SEXO = SEXO,
+               EDAD = EDAD,
+               PAREN = PARENTESCO,
+               ESTCI = ESTADO_CIVIL,
+               AFILI = AFILIACION_SEGURIDAD_SOCIAL,
+               ESLEE = SABE_LEER_ESCRIBIR,
+               COLEA = ASISTE_INSTITUCION_EDUCATIVA,
+               COLEP = INSTITUCION_EDUCATIVA,
+               ANOGR = ANIO_GRADO,
+               MA = VIVE_M,
+               PA = VIVE_P,
+               CAMP = CAMP,
+               HOGAC = ClaseHogar,
+               DEPAR = Depart,
+               HOGAT = TipoHogar,
+               LUZ = Luz,
+               GAS = Gas,
+               ALCAN = Alcantarillado,
+               BASUR = Basura,
+               ACUED = Acueducto,
+               PRAWA = ProceAgua,
+               PROPI = PropHogar,
+               HOGCA = CantHogares,
+               ACTPR = ACTIVIDAD_PRINCIPAL,
+               EDADC = EDADC,
+               TAMHO = TAM_HOGARC)
+
+```
+
+Recategorizacion 
+TAMAN es 'Tamaño del Hogar',  PAREN es 'Parentesco', ESTCI es 'estado civil', AFILI es AFILiADO A SEGURO SOCIAL, ESLEE es 'sabe leer', COLEA 'Asiste al colegio', COLEP 'colegio publico o privado', ANOGR es 'año del grado', MA es 'vive con su mama' , PA 'vive con su papa', CAMP 'es campesiono', HOGAC = 'Clase de hogar (urbano o rural)', DEPAR es 'departamento', HOGAT es 'Tipo de hogar' (casa apartemento o otro), HOGCA es 'Cantidad de hogares', ACTPR es ACtividad Principal 
+
+```{r}
+colnames(Primero)
+```
+
+```{r}
+Activas<- Primero%>%select(COLEA,ACTPR,MA,PA,CAMP,ESTCI,GAS, ALCAN,BASUR,ACUED
+        )%>%as.data.frame()
+
+
+summary(Activas)
+```
+```{r}
+library(FactoClass)
+
+acm <-dudi.acm (Activas, scannf = FALSE,nf=3)
+
+barplot ( acm$eig)
+
+ayu<-inertia.dudi(acm,,T)
+plot(acm,Tcol = F,roweti = F)
+plot(acm,1,3,Tcol = F,roweti = F)
+plotfp(acm$cr,1,3,gg=TRUE)
+plotfp(acm$cr,gg=TRUE)
+plot(acm,Trow = F)
+plot(acm,1,3,Trow = F)
+```
+```{r,echo=FALSE}
+ayu<-inertia.dudi(acm,,T)
+
+round(cbind(peso=acm$cw*100,acm$co,ayu$col.abs/100,abs(ayu$col.rel)/100),3)
+```
+
+Podemos observar que el primer eje separa a los niños que viven en el campo y no tienen acceso a servicios. El segundo eje distingue los oficios del hogar, indicando que los niños que viven en el campo lo hacen con ambos padres.
+
+Así, podemos notar que los niños que están trabajando tienen menos acceso a servicios, no conviven con sus padres, no asisten al colegio y residen en la ciudad. Su estado civil difiere de "soltero". Por otro lado, los niños cuya actividad principal son los oficios del hogar suelen ser del campo, viven con sus padres, pero no tienen acceso a servicios.
+
+Como era de esperar, los niños que estudian tienen acceso a servicios y viven con sus padres o con sus abuelos.
+
+El tercer eje nos genera una partición más clara entre los oficios del hogar y los niños que están trabajando, y al unirlos con el primer eje, se puede ver más claramente que las situaciones de precariedad son más comunes entre los niños del oficio del hogar y los que están trabajando.
+
+### Varaibles suplementarias
+```{r}
+library(dplyr)
+Ilus<- Primero%>%select(-c(EDAD,TAMAN,ANOGR, HOGCA ,DEPAR,P408, P409, P414, P420, P413, P405,COLEA,ACTPR,MA,PA,CAMP,ESTCI,GAS, ALCAN,BASUR,ACUED, SUMA_DIAS,SUMA_HORAS_DIA ,SUMA_INDICADORAS )
+        )%>%as.data.frame()
+
+
+summary(Ilus)
+```
+```{r}
+supcar <- supqual ( acm , Ilus)
+
+round(cbind(Indice=seq(1:length(supcar$tv[,1])), supcar$tv),3)
+
+
+
+```
+
+
+```{r}
+library(FactoClass)
+
+plotfp(as.data.frame(supcar$coor[,1:2]),col="blue",cframe=1,gg=TRUE)
+```
+```{r}
+plotfp(as.data.frame(supcar$coor),x=2,y=3,col="blue",cframe=1,gg=TRUE)
+```
+
+## Cluster
+
+```{r}
+help("FactoClass")
+clus<-FactoClass(Activas,dudi.acm,nf=3,k.clust = 3,scanFC = FALSE)
+```
+```{r}
+clus$clus.summ
+```
+```{r}
+clus$carac.cate
+```
+```{r}
+Ilus<-cbind(Ilus,Cluster=as.factor(clus$cluster))
+
+```
+```{r}
+supcar <- supqual ( acm , Ilus)
+```
+```{r}
+plotfp(as.data.frame(supcar$coor),col="blue",cframe=1,gg=TRUE)
+```
+```{r}
+plotfp(as.data.frame(supcar$coor),x=2,y=3,col="blue",cframe=1,gg=TRUE)
+```
+```{r}
+barplot(tail(clus$indices$Indice,20))
+```
+
