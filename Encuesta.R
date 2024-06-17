@@ -339,3 +339,4 @@ ayu2<-inertia.dudi(acm2,,T)
 ayu2
 plot(acm2)
 plot(acm,Trow = F)
+#hola
